@@ -1,6 +1,9 @@
 # jetbot_ros
 ROS2 nodes and Gazebo model for NVIDIA JetBot ported from Jetson Nano to Rubik PI https://www.thundercomm.com/rubik-pi-3/en/docs/rubik-pi-3-user-manual/1.0.0-u/set-up-your-device
 
+<img width="901" height="712" alt="image" src="https://github.com/user-attachments/assets/3b368e39-3d75-4b1e-b3b4-19c854777292" />
+
+
 > note:  if you want to use ROS Melodic, see the [`melodic`](https://github.com/dusty-nv/jetbot_ros/tree/melodic) branch
 
 ### Start the JetBot ROS2 Jazzy container

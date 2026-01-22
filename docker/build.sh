@@ -22,7 +22,7 @@ build_container()
 	echo "building $container_image"
 	echo "BASE_IMAGE=$BASE_IMAGE"
 
-	sudo docker build --platform linux/arm64 -t $container_image -f $dockerfile \
+	sudo docker buildx build --platform linux/arm64 --load -t $container_image -f $dockerfile \
 			--build-arg BASE_IMAGE=$BASE_IMAGE \
 			.
 }

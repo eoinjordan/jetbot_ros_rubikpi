@@ -56,22 +56,10 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-RUN apt-get update && apt-get install -y software-properties-common && \
-    add-apt-repository -y ppa:openrobotics/gazebo && \
-    apt-get update && \
-    apt-get install -y gazebo \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
-RUN apt-get update && \
-    apt-get install -y ros-jazzy-gazebo-ros-pkgs \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
 RUN git clone https://github.com/dusty-nv/py3gazebo /opt/py3gazebo && \
-    pip3 install protobuf>=2.6 --verbose && \
-    pip3 install trollius --verbose && \
-    pip3 install pynput --verbose
+    pip3 install protobuf>=2.6 --verbose --break-system-packages && \
+    pip3 install trollius --verbose --break-system-packages && \
+    pip3 install pynput --verbose --break-system-packages
 
 ENV PYTHONPATH=/opt/py3gazebo
    
@@ -79,7 +67,7 @@ ENV PYTHONPATH=/opt/py3gazebo
 #
 # JetBot hw controllers
 #
-RUN pip3 install Adafruit-MotorHAT Adafruit-SSD1306 pyserial sparkfun-qwiic --verbose
+RUN pip3 install Adafruit-MotorHAT Adafruit-SSD1306 pyserial sparkfun-qwiic --verbose --break-system-packages
 
 
 #
@@ -101,16 +89,6 @@ RUN mkdir -p ${WORKSPACE_ROOT}/src
 COPY scripts/setup_workspace.sh ${WORKSPACE_ROOT}/setup_workspace.sh
 ENV PYTHONPATH="${JETBOT_ROOT}:${PYTHONPATH}"
 
-    
-#
-# ros_deep_learning package
-#
-RUN source ${ROS_ENVIRONMENT} && \
-    cd ${WORKSPACE_ROOT}/src && \
-    git clone https://github.com/dusty-nv/ros_deep_learning && \
-    cd ../ && \
-    colcon build --symlink-install --event-handlers console_direct+
-
 
 #
 # build project
@@ -124,13 +102,6 @@ COPY package.xml ${JETBOT_ROOT}
 COPY setup.py ${JETBOT_ROOT}
 COPY setup.cfg ${JETBOT_ROOT}
 
-RUN cd ${JETBOT_ROOT}/gazebo/plugins/ && \
-    mkdir build && \
-    cd build && \
-    cmake ../ && \
-    make -j$(nproc) && \
-    make install
-    
 RUN source ${ROS_ENVIRONMENT} && \
     cd ${WORKSPACE_ROOT} && \
     colcon build --symlink-install --event-handlers console_direct+

@@ -35,6 +35,8 @@ Otherwise, see the [`Launch Gazebo`](#launch-gazebo) section below to run the si
 ros2 launch jetbot_ros gazebo_world.launch.py
 ```
 
+> **Note:** Gazebo simulation is currently not included in the Docker build due to compatibility issues on M1 Macs. This will be revisited for future updates.
+
 Then to run the following commands, launch a new terminal session into the container:
 
 ``` bash

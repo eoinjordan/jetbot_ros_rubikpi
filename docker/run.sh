@@ -22,7 +22,7 @@ show_help() {
     echo " "
     echo "   --help                       Show this help text and quit"
     echo " "
-    echo "   --ros ROS_DISTRO  ROS distro to use:  eloquent, foxy (default is foxy)"
+    echo "   --ros ROS_DISTRO  ROS distro to use:  jazzy (default is jazzy)"
     echo "                     This option sets the container image to use."
     echo " "
     echo "   -c, --container DOCKER_IMAGE  Manually specify the name/tag of the Docker"
@@ -64,7 +64,7 @@ DATA_VOLUME="--volume $PWD/data:$DOCKER_ROOT/data"
 DEV_VOLUME=""
 
 # parse user arguments
-ROS_DISTRO="foxy"
+ROS_DISTRO="jazzy"
 USER_VOLUME=""
 USER_COMMAND=""
 
@@ -188,13 +188,11 @@ xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
 chmod 777 $XAUTH
 
 # run the container
-sudo docker run --runtime nvidia -it --rm --name jetbot_ros \
+sudo docker run -it --rm --name jetbot_ros \
     --network host \
     --privileged \
     -e DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix/:/tmp/.X11-unix \
     -v $XAUTH:$XAUTH -e XAUTHORITY=$XAUTH \
-    -v /tmp/argus_socket:/tmp/argus_socket \
-    -v /etc/enctune.conf:/etc/enctune.conf \
     $MOUNTS $CONTAINER_IMAGE $USER_COMMAND
 	    

@@ -6,21 +6,12 @@
 #     $ cd /path/to/your/jetbot_ros
 #     $ docker/build.sh
 #
-# Also you should set your docker default-runtime to nvidia:
-#     https://github.com/dusty-nv/jetson-containers#docker-default-runtime
-#
-ROS_DISTRO=${1:-"foxy"}
-BASE_IMAGE=$2
+ROS_DISTRO=${1:-"jazzy"}
+BASE_IMAGE="osrf/ros:jazzy-desktop"
+TAG="ubuntu24.04"
 
 # break on errors
 set -e
-
-# find L4T_VERSION
-source docker/tag.sh
-
-if [ -z $BASE_IMAGE ]; then
-	BASE_IMAGE="dustynv/ros:$ROS_DISTRO-pytorch-l4t-$TAG"
-fi
 
 
 build_container()
@@ -31,7 +22,7 @@ build_container()
 	echo "building $container_image"
 	echo "BASE_IMAGE=$BASE_IMAGE"
 
-	sudo docker build -t $container_image -f $dockerfile \
+	sudo docker build --platform linux/arm64 -t $container_image -f $dockerfile \
 			--build-arg BASE_IMAGE=$BASE_IMAGE \
 			.
 }

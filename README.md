@@ -1,9 +1,9 @@
 # jetbot_ros
-ROS2 nodes and Gazebo model for NVIDIA JetBot with Jetson Nano
+ROS2 nodes and Gazebo model for NVIDIA JetBot ported from Jetson Nano to Rubik PI https://www.thundercomm.com/rubik-pi-3/en/docs/rubik-pi-3-user-manual/1.0.0-u/set-up-your-device
 
 > note:  if you want to use ROS Melodic, see the [`melodic`](https://github.com/dusty-nv/jetbot_ros/tree/melodic) branch
 
-### Start the JetBot ROS2 Foxy container
+### Start the JetBot ROS2 Jazzy container
 
 ``` bash
 git clone https://github.com/dusty-nv/jetbot_ros
@@ -13,10 +13,10 @@ docker/run.sh
  
 ### Run JetBot
 
-If you have a real JetBot, you can start the camera / motors like so:
+If you have a real JetBot ported to Rubik PI, you can start the camera / motors like so:
 
 ``` bash
-ros2 launch jetbot_ros jetbot_nvidia.launch.py
+ros2 launch jetbot_ros jetbot.launch.py
 ```
 
 or (for a Sparkfun Jetbot)
@@ -87,4 +87,5 @@ ros2 launch jetbot_ros nav_model.launch.py model:=/workspace/src/jetbot_ros/data
 > note:  to reset the position of the robot in the Gazebo environment, press `Ctrl+R`
 
 <a href="https://youtu.be/gok9pvUzZeY" target="_blank"><img src=https://github.com/dusty-nv/jetbot_ros/raw/dev/docs/images/jetbot_gazebo_sim_video.jpg width="750"></a>
+
 

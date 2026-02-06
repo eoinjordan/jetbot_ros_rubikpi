@@ -165,12 +165,14 @@ ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.05}, angular:
 
 ### Edge Impulse (camera + motor health)
 
-Install Edge Impulse dependencies (system Python is used by `ros2`):
+Install Edge Impulse dependencies (system Python is used by `ros2`). On Ubuntu 24.04 (noble), use these package names:
 
 ```bash
-sudo apt install -y libatlas-base-dev libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev \
-	libopenjp2-7 libgtk-3-0 libswscale-dev libavformat58 libavcodec58
+sudo apt install -y libatlas-base-dev libportaudio2 portaudio19-dev python3-pyaudio \
+	libopenjp2-7 libgtk-3-0 libswscale-dev libavformat60 libavcodec60 libavutil58 \
+	libswscale7 python3-opencv
 sudo python3 -m pip install --break-system-packages -r requirements-edge-impulse.txt
+sudo python3 -m pip install --break-system-packages edge-impulse-linux
 ```
 
 Download your model file:

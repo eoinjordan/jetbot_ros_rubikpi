@@ -4,6 +4,7 @@ Robotics-Series-Documentation/
 robotics-docs/
 robotics-docs/jetbot-port-qualcomm.mdx
 robotics-docs/rubikpi-image-build.mdx
+linux-sdk-python/
 .DS_Store
 rubik_*.log
 

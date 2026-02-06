@@ -44,6 +44,9 @@ setup(
             'motors_waveshare = jetbot_ros.motors_waveshare:main',
             'motors_sparkfun = jetbot_ros.motors_sparkfun:main',
             'oled_ssd1306 = jetbot_ros.oled_ssd1306:main',
+            'ei_image_node = jetbot_ros.edge_impulse.ei_image_node:main',
+            'ei_motor_health_node = jetbot_ros.edge_impulse.ei_custom_sensor_node:main',
+            'ei_motor_health_collect = jetbot_ros.edge_impulse.ei_custom_sensor_collect:main',
         ],
     },
 )

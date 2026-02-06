@@ -122,6 +122,15 @@ Install Gazebo dependencies (only needed for simulation):
 sudo apt install gazebo ros-jazzy-gazebo-ros
 ```
 
+#### Gazebo on macOS (M1/M2) and Windows
+
+Gazebo Classic is not supported natively on macOS Apple Silicon or Windows. Use a Linux environment:
+
+- **Windows**: WSL2 + Ubuntu 24.04 (recommended). Install ROS 2 Jazzy + Gazebo Classic inside WSL2.
+- **macOS (M1/M2)**: run Ubuntu 24.04 in a VM (UTM/VMware/Parallels) and install ROS 2 Jazzy + Gazebo Classic there.
+
+Once inside the Linux environment, follow the same commands below.
+
 Build and source the overlay before launching:
 
 ```bash
@@ -152,6 +161,44 @@ ros2 launch jetbot_ros jetbot_cpu.launch.py motor_controller:=motors_sparkfun
 
 ```bash
 ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.05}, angular: {z: 0.0}}"
+```
+
+### Edge Impulse (camera + motor health)
+
+Install Edge Impulse dependencies (system Python is used by `ros2`):
+
+```bash
+sudo apt install -y libatlas-base-dev libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev \
+	libopenjp2-7 libgtk-3-0 libswscale-dev libavformat58 libavcodec58
+sudo python3 -m pip install --break-system-packages -r requirements-edge-impulse.txt
+```
+
+Download your model file:
+
+```bash
+edge-impulse-linux-runner --download modelfile.eim
+```
+
+**Camera inference (publishes JSON to `/edge_impulse/image`):**
+
+```bash
+ros2 run jetbot_ros ei_image_node --ros-args -p model_path:=modelfile.eim -p camera_id:=0
+```
+
+**Motor health inference (publishes JSON to `/edge_impulse/motor_health`):**
+
+Publish your motor-health sensor stream as `std_msgs/Float32MultiArray` on `motor_health/raw`, then run:
+
+```bash
+ros2 run jetbot_ros ei_motor_health_node --ros-args -p model_path:=modelfile.eim -p window_size:=300
+```
+
+**Upload custom motor health data to Edge Impulse (CSV → ingestion API):**
+
+```bash
+export EDGE_IMPULSE_API_KEY=your_api_key
+export EDGE_IMPULSE_HMAC_KEY=your_hmac_key
+ros2 run jetbot_ros ei_motor_health_collect -- --input motor_health.csv --interval-ms 16 --label motor_health
 ```
 
 ### Test Teleop

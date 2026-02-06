@@ -1,6 +1,7 @@
 data/
 logs/
 Robotics-Series-Documentation/
+robotics-docs/
 .DS_Store
 rubik_*.log
 

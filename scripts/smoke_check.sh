@@ -15,6 +15,11 @@ if [[ -f "$(dirname "$0")/../.venv/bin/activate" ]]; then
 	source "$(dirname "$0")/../.venv/bin/activate"
 fi
 
+# Source local overlay if present (ensures jetbot_ros package is discoverable)
+if [[ -f "$(dirname "$0")/../install/setup.bash" ]]; then
+	source "$(dirname "$0")/../install/setup.bash"
+fi
+
 if ! command -v ros2 >/dev/null 2>&1; then
 	echo "ros2: command not found. Source ROS or install ROS 2 Jazzy before running." >&2
 	exit 1

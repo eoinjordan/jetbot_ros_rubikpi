@@ -22,20 +22,29 @@ def generate_launch_description():
     world_file_name = 'dirt_path_curves.world'
     pkg_dir = get_package_share_directory('jetbot_ros')
  
-    os.environ["GAZEBO_MODEL_PATH"] = os.path.join(pkg_dir, 'models')
+    existing_model_path = os.environ.get("GAZEBO_MODEL_PATH", "")
+    model_path = os.path.join(pkg_dir, 'models')
+    os.environ["GAZEBO_MODEL_PATH"] = (
+        f"{model_path}:{existing_model_path}" if existing_model_path else model_path
+    )
  
     world = os.path.join(pkg_dir, 'worlds', world_file_name)
     launch_file_dir = os.path.join(pkg_dir, 'launch')
  
+    gazebo_cmd = [
+        'gazebo', '--verbose', world,
+        '-s', 'libgazebo_ros_init.so',
+        '-s', 'libgazebo_ros_factory.so',
+    ]
+
     gazebo = ExecuteProcess(
-                cmd=['gazebo', '--verbose', world, 
-                     '-s', 'libgazebo_ros_init.so', 
-                     '-s', 'libgazebo_ros_factory.so',
-                     '-g', 'libgazebo_user_camera_control_system.so'],
-                output='screen', emulate_tty=True)
+        cmd=gazebo_cmd,
+        output='screen',
+        emulate_tty=True,
+    )
 
     
-    spawn_entity = Node(package='jetbot_ros', node_executable='gazebo_spawn',   # FYI 'node_executable' is renamed to 'executable' in Foxy
+    spawn_entity = Node(package='jetbot_ros', executable='gazebo_spawn',
                         parameters=[
                             {'name': LaunchConfiguration('robot_name')},
                             {'model': LaunchConfiguration('robot_model')},

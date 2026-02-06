@@ -85,6 +85,13 @@ ros2 run v4l2_camera v4l2_camera_node --ros-args \
 
 Note: `pixel_format` must be a 4‑character code (FOURCC). Use `MJPG` (not `mjpeg`).
 
+If you see `Device or resource busy`, another process is using the camera. Stop other camera nodes and retry:
+
+```bash
+ros2 node list
+ros2 node kill /v4l2_camera
+```
+
 Note: ROS 2 nodes launched with `ros2` use system Python by default. For `motors_sparkfun`, ensure Qwiic is installed into system Python (the provisioner does this). If you skipped provisioning, run:
 
 ```bash
@@ -125,6 +132,26 @@ source install/setup.bash
 
 ``` bash
 ros2 launch jetbot_ros gazebo_world.launch.py
+```
+
+### Sim → Real checklist
+
+1) Verify simulation:
+
+```bash
+ros2 launch jetbot_ros gazebo_world.launch.py
+```
+
+2) Verify real hardware (SparkFun kit):
+
+```bash
+ros2 launch jetbot_ros jetbot_cpu.launch.py motor_controller:=motors_sparkfun
+```
+
+3) Send a short motor command:
+
+```bash
+ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.05}, angular: {z: 0.0}}"
 ```
 
 ### Test Teleop

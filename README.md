@@ -7,13 +7,10 @@ ROS2 nodes and Gazebo model for JetBot-class robots, validated for Rubik Pi (har
 > note:  if you want to use ROS Melodic, see the [`melodic`](https://github.com/dusty-nv/jetbot_ros/tree/melodic) branch
 
 ### Start the JetBot ROS2 Jazzy container (optional, NVIDIA Jetson legacy)
-
-``` bash
-git clone https://github.com/dusty-nv/jetbot_ros
-cd jetbot_ros
-docker/run.sh
+```note
+The Docker-based `dustynv/jetbot_ros` container is intended for NVIDIA Jetson systems only.
+If you are running on Rubik Pi (Ubuntu 24.04) or a Raspberry Pi, skip the Jetson Docker steps and follow the local (native) instructions below.
 ```
- 
 ### Run JetBot (Rubik Pi / Raspberry Pi)
 
 For Rubik Pi or Raspberry Pi on Ubuntu 24.04, use ROS 2 Jazzy and the CPU camera pipeline:
@@ -37,7 +34,7 @@ sudo bash scripts/rubikpi_provision.sh
 After provisioning, create a venv and build the ROS overlay (required for `ros2 launch`):
 
 ```bash
-cd ~/jetbot_ros
+cd ~/jetbot_ros_rubikpi
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
@@ -52,7 +49,7 @@ source install/setup.bash
 Run the smoke checks to validate hardware and ROS connectivity:
 
 ```bash
-cd ~/jetbot_ros
+cd ~/jetbot_ros_rubikpi
 source .venv/bin/activate
 source /opt/ros/jazzy/setup.bash
 ./scripts/smoke_check.sh

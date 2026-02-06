@@ -39,6 +39,8 @@ class NavigationModel:
             
         self.type = type
         self.resolution = resolution
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self._use_cuda = self.device.type == "cuda"
         
         self.data_transforms = transforms.Compose([
                 transforms.Resize((self.resolution, self.resolution)),
@@ -50,7 +52,7 @@ class NavigationModel:
         # load model
         if len(os.path.splitext(model)[1]) > 0:
             print(f"=> loading model '{model}'")
-            checkpoint = torch.load(model)
+            checkpoint = torch.load(model, map_location=self.device)
             
             if self.type != checkpoint['type']:
                 raise ValueError(f"'{model}' is a {checkpoint['type']} model, but expected a {self.type} model")
@@ -72,14 +74,14 @@ class NavigationModel:
             self.model = reshape_model(self.model, self.model_arch, self.num_outputs)
             
             self.model.load_state_dict(checkpoint['state_dict'])
-            self.model.cuda()
+            self.model.to(self.device)
         else:
             print(f"=> creating model '{model}'")
             self.model = models.__dict__[model](pretrained=True)
             self.model_arch = model
             self.num_outputs = 1000    # default classes for torchvision models
     
-        self.model.cuda()
+        self.model.to(self.device)
         
         # warmup model inference
         print(f"=> running model warm-up")
@@ -88,7 +90,7 @@ class NavigationModel:
             self.model.eval()
             
             with torch.no_grad():
-                input = torch.ones((1, 3, resolution, resolution)).cuda()
+                input = torch.ones((1, 3, resolution, resolution), device=self.device)
                 output = self.model(input)
         
         print(f"=> done with model warm-up")
@@ -102,7 +104,7 @@ class NavigationModel:
         return self.type == 'regression'
         
     def infer(self, image):
-        image = self.data_transforms(image).unsqueeze(0).cuda()
+        image = self.data_transforms(image).unsqueeze(0).to(self.device)
 
         self.model.eval()
         
@@ -124,11 +126,12 @@ class NavigationModel:
         """
         train_loader, val_loader, class_weights = self.load_dataset(dataset, batch_size, workers, train_split)
         
-        self.model.cuda()
+        self.model.to(self.device)
         
         # setup model, loss function, and solver
         if self.classification:
-            criterion = nn.CrossEntropyLoss(weight=torch.Tensor(class_weights) if use_class_weights else None).cuda()
+            weight = torch.tensor(class_weights, device=self.device) if use_class_weights else None
+            criterion = nn.CrossEntropyLoss(weight=weight).to(self.device)
         else:
             criterion = nn.MSELoss()
             
@@ -144,8 +147,8 @@ class NavigationModel:
             train_accuracy = 0.0
             
             for i, (images, target) in enumerate(train_loader):
-                images = images.cuda(non_blocking=True)
-                target = target.cuda(non_blocking=True)
+                images = images.to(self.device, non_blocking=self._use_cuda)
+                target = target.to(self.device, non_blocking=self._use_cuda)
                 
                 # compute model output
                 output = self.model(images)
@@ -223,8 +226,8 @@ class NavigationModel:
         
         with torch.no_grad():
             for i, (images, target) in enumerate(val_loader):
-                images = images.cuda(non_blocking=True)
-                target = target.cuda(non_blocking=True)
+                images = images.to(self.device, non_blocking=self._use_cuda)
+                target = target.to(self.device, non_blocking=self._use_cuda)
                 
                 # compute model output
                 output = self.model(images)
@@ -297,7 +300,7 @@ class NavigationModel:
                 
             val_loader = torch.utils.data.DataLoader(
                 val_dataset, batch_size=batch_size, num_workers=workers,
-                shuffle=False, pin_memory=True)
+                shuffle=False, pin_memory=self._use_cuda)
         else:
             train_dataset = dataset
             val_dataset = None
@@ -306,7 +309,7 @@ class NavigationModel:
         # create dataloaders
         train_loader = torch.utils.data.DataLoader(
             train_dataset, batch_size=batch_size, num_workers=workers,
-            shuffle=True, pin_memory=True)
+            shuffle=True, pin_memory=self._use_cuda)
 
         print(f'=> train samples:   {len(train_dataset)}')
         print(f'=> val samples:     {len(val_dataset) if val_dataset is not None else 0}')

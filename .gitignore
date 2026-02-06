@@ -1,5 +1,8 @@
 data/
 logs/
+Robotics-Series-Documentation/
+.DS_Store
+rubik_*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ament_copyright.main import main
 import pytest
+
+try:
+    from ament_copyright.main import main
+except ModuleNotFoundError:
+    main = None
 
 
 @pytest.mark.copyright
 @pytest.mark.linter
 def test_copyright():
+    if main is None:
+        pytest.skip('ament_copyright is not installed')
     rc = main(argv=['.', 'test'])
     assert rc == 0, 'Found errors'

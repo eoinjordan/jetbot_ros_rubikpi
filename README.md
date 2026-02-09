@@ -1,8 +1,8 @@
 # jetbot_ros
 ROS2 nodes and Gazebo model for JetBot-class robots, validated for Rubik Pi (Ubuntu 24.04 / ROS 2 Jazzy).
 
-<img width="901" height="712" alt="image" src="https://github.com/user-attachments/assets/3b368e39-3d75-4b1e-b3b4-19c854777292" />
 
+<img width="901" height="712" alt="robots" src="https://github.com/user-attachments/assets/f6f2c591-a1bd-448d-b768-a183fa6713ea" />
 
 > note:  if you want to use ROS Melodic, see the [`melodic`](https://github.com/dusty-nv/jetbot_ros/tree/melodic) branch
 

@@ -1,226 +1,137 @@
-# jetbot_ros
-ROS2 nodes and Gazebo model for JetBot-class robots, validated for Rubik Pi (Ubuntu 24.04 / ROS 2 Jazzy).
+# JetBot ROS on Rubik Pi
 
+ROS 2 Jazzy nodes, Gazebo simulation assets, and Edge Impulse integration for a
+JetBot-class robot on Rubik Pi and Ubuntu 24.04.
+
+This repository covers four concrete workflows:
+
+- Real JetBot bringup on Rubik Pi with SparkFun or Waveshare motor control
+- Gazebo simulation for navigation and dataset generation
+- Local navigation model training and replay
+- Edge Impulse camera detection using the separate `edgeimpulse_ros` package
 
 <img width="901" height="712" alt="robots" src="https://github.com/user-attachments/assets/f6f2c591-a1bd-448d-b768-a183fa6713ea" />
 
-> note:  if you want to use ROS Melodic, see the [`melodic`](https://github.com/dusty-nv/jetbot_ros/tree/melodic) branch
+## What Is In This Repo
+
+```text
+jetbot_ros/                Python ROS 2 nodes for motors, teleop, nav, data collection
+launch/                    Real hardware, teleop, Gazebo, and Edge Impulse launch files
+gazebo/models/             JetBot and track models
+gazebo/worlds/             Dirt path and maze worlds
+docs/                      Setup and workflow notes
+scripts/                   Provisioning and workspace helpers
+data/                      Local datasets and trained models
+```
+
+## Platform
+
+Validated target:
+
+- Ubuntu 24.04
+- ROS 2 Jazzy
+- Rubik Pi
+- SparkFun JetBot AI Kit v2.0 or compatible JetBot-class chassis
+
+Simulation in this repo still uses Gazebo Classic:
+
+- `gazebo`
+- `gazebo_ros`
+
+If you want Gazebo Harmonic or modern `ros_gz_*` tooling, that is a separate
+migration.
+
+## Hardware Bringup
 
 ### SparkFun kit resources
 
-- SparkFun JetBot AI Kit v2.0 assembly guide (previous version): https://learn.sparkfun.com/tutorials/assembly-guide-for-sparkfun-jetbot-ai-kit-v20/resources-and-going-further
-- SparkFun Qwiic Motor Driver hookup guide: https://learn.sparkfun.com/tutorials/sparkfun-qwiic-motor-driver-hookup-guide
-- SparkFun Qwiic Micro OLED hookup guide: https://learn.sparkfun.com/tutorials/sparkfun-qwiic-micro-oled-hookup-guide
-- SparkFun Qwiic pHAT hookup guide: https://learn.sparkfun.com/tutorials/sparkfun-qwiic-phat-hookup-guide
+- SparkFun JetBot AI Kit v2.0 assembly guide:
+  https://learn.sparkfun.com/tutorials/assembly-guide-for-sparkfun-jetbot-ai-kit-v20/resources-and-going-further
+- SparkFun Qwiic Motor Driver hookup guide:
+  https://learn.sparkfun.com/tutorials/sparkfun-qwiic-motor-driver-hookup-guide
+- SparkFun Qwiic Micro OLED hookup guide:
+  https://learn.sparkfun.com/tutorials/sparkfun-qwiic-micro-oled-hookup-guide
+- SparkFun Qwiic pHAT hookup guide:
+  https://learn.sparkfun.com/tutorials/sparkfun-qwiic-phat-hookup-guide
 
-### Qwiic (I2C) setup checklist
+### Qwiic / I2C checklist
 
 ```bash
 sudo apt install -y i2c-tools python3-smbus
 sudo usermod -aG i2c $USER
-# log out/in after this, then:
+# log out and back in, then:
 i2cdetect -y 1
 ```
-### Run JetBot (SparkFun JetBot AI Kit v2.0 on Rubik Pi / Ubuntu 24.04)
 
-These instructions assume the SparkFun JetBot AI Kit (Qwiic pHAT + Qwiic Motor Driver + Qwiic Micro OLED) on Rubik Pi running Ubuntu 24.04 with ROS 2 Jazzy.
+### Rubik Pi provisioning
 
-``` bash
-ros2 launch jetbot_ros jetbot_cpu.launch.py motor_controller:=motors_sparkfun
-```
-
-Make sure the v4l2 camera node is installed (Jazzy on Ubuntu 24.04):
-
-``` bash
-sudo apt install ros-jazzy-v4l2-camera
-```
-
-If you are on Rubik Pi, you can provision the full stack using:
-
-``` bash
+```bash
+cd ~/jetbot_ros_rubikpi
 sudo bash scripts/rubikpi_provision.sh
 ```
 
-After provisioning, create a venv and build the ROS overlay (required for `ros2 launch`):
+That installs:
+
+- ROS 2 Jazzy base packages
+- `v4l2_camera`
+- Gazebo Classic
+- `vision_msgs`
+- OpenCV
+- Qwiic / motor / OLED Python dependencies
+
+## Build
+
+This package can be built standalone:
 
 ```bash
 cd ~/jetbot_ros_rubikpi
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install torch==2.2.2 --extra-index-url https://download.pytorch.org/whl/cpu
-pip install -e .
-
 source /opt/ros/jazzy/setup.bash
 colcon build --symlink-install
 source install/setup.bash
 ```
 
-If you see `package 'jetbot_ros' not found`, it means the overlay is not sourced. Run:
+If `ros2 launch jetbot_ros ...` says the package is not found:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 ```
 
-Run the smoke checks to validate hardware and ROS connectivity:
+## Run Real JetBot
 
-```bash
-cd ~/jetbot_ros_rubikpi
-source .venv/bin/activate
-source /opt/ros/jazzy/setup.bash
-./scripts/smoke_check.sh
-```
-
-### USB webcam troubleshooting (Logitech StreamCam and low-cost USB cams)
-
-If you see `Failed mapping device memory`, run the camera node with MJPG and a lower resolution:
-
-```bash
-ros2 run v4l2_camera v4l2_camera_node --ros-args \
-	-p video_device:=/dev/video0 \
-	-p image_width:=320 -p image_height:=240 -p fps:=15.0 \
-	-p pixel_format:="MJPG"
-```
-
-Note: `pixel_format` must be a 4‑character code (FOURCC). Use `MJPG` (not `mjpeg`).
-
-If you see `Device or resource busy`, another process is using the camera. Stop other camera nodes and retry:
-
-```bash
-ros2 node list
-ros2 node kill /v4l2_camera
-```
-
-Note: ROS 2 nodes launched with `ros2` use system Python by default. For `motors_sparkfun`, ensure Qwiic is installed into system Python (the provisioner does this). If you skipped provisioning, run:
-
-```bash
-sudo python3 -m pip install --break-system-packages sparkfun-qwiic pyserial spidev
-```
-
-
-Other motor controller options:
-
-``` bash
-ros2 launch jetbot_ros jetbot_cpu.launch.py motor_controller:=motors_waveshare
-```
-
-If you use `motors_waveshare`, install the MotorHAT dependency in your venv:
-
-```bash
-source .venv/bin/activate
-pip install Adafruit-MotorHAT
-```
-
-See the [`Launch Gazebo`](#launch-gazebo) section below to run the simulator.
-
-### Launch Gazebo
-
-Install Gazebo dependencies (only needed for simulation):
-
-``` bash
-sudo apt install gazebo ros-jazzy-gazebo-ros
-```
-
-#### Gazebo on macOS (M1/M2) and Windows
-
-Gazebo Classic is not supported natively on macOS Apple Silicon or Windows. Use a Linux environment:
-
-- **Windows**: WSL2 + Ubuntu 24.04 (recommended). Install ROS 2 Jazzy + Gazebo Classic inside WSL2.
-- **macOS (M1/M2)**: run Ubuntu 24.04 in a VM (UTM/VMware/Parallels) and install ROS 2 Jazzy + Gazebo Classic there.
-
-Once inside the Linux environment, follow the same commands below.
-
-Build and source the overlay before launching:
-
-```bash
-source /opt/ros/jazzy/setup.bash
-colcon build --symlink-install
-source install/setup.bash
-```
-
-``` bash
-ros2 launch jetbot_ros gazebo_world.launch.py
-```
-
-### Sim → Real checklist
-
-1) Verify simulation:
-
-```bash
-ros2 launch jetbot_ros gazebo_world.launch.py
-```
-
-2) Verify real hardware (SparkFun kit):
+### SparkFun motor controller
 
 ```bash
 ros2 launch jetbot_ros jetbot_cpu.launch.py motor_controller:=motors_sparkfun
 ```
 
-3) Send a short motor command:
+### Waveshare motor controller
 
 ```bash
-ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.05}, angular: {z: 0.0}}"
+ros2 launch jetbot_ros jetbot_cpu.launch.py motor_controller:=motors_waveshare
 ```
 
-### Edge Impulse (camera + motor health)
-
-Install Edge Impulse dependencies (system Python is used by `ros2`). On Ubuntu 24.04 (noble), use these package names:
+If you use `motors_waveshare`, install:
 
 ```bash
-sudo apt install -y libatlas-base-dev libportaudio2 portaudio19-dev python3-pyaudio \
-	libopenjp2-7 libgtk-3-0 libswscale-dev libavformat60 libavcodec60 libavutil58 \
-	libswscale7 python3-opencv
-sudo python3 -m pip install --break-system-packages -r requirements-edge-impulse.txt
-sudo python3 -m pip install --break-system-packages edge-impulse-linux
+pip install Adafruit-MotorHAT
 ```
 
-Download your model file:
+### Camera package
+
+Install the ROS camera node:
 
 ```bash
-edge-impulse-linux-runner --download modelfile.eim
+sudo apt install ros-jazzy-v4l2-camera
 ```
 
-**Camera inference (publishes JSON to `/edge_impulse/image`):**
+The default launch remaps camera output to:
 
-```bash
-ros2 run jetbot_ros ei_image_node --ros-args -p model_path:=modelfile.eim -p camera_id:=0
+```text
+/jetbot/camera/image_raw
 ```
 
-**Motor health inference (publishes JSON to `/edge_impulse/motor_health`):**
-
-Publish your motor-health sensor stream as `std_msgs/Float32MultiArray` on `motor_health/raw`, then run:
-
-```bash
-ros2 run jetbot_ros ei_motor_health_node --ros-args -p model_path:=modelfile.eim -p window_size:=300
-```
-
-**Upload custom motor health data to Edge Impulse (CSV → ingestion API):**
-
-```bash
-export EDGE_IMPULSE_API_KEY=your_api_key
-export EDGE_IMPULSE_HMAC_KEY=your_hmac_key
-ros2 run jetbot_ros ei_motor_health_collect -- --input motor_health.csv --interval-ms 16 --label motor_health
-```
-
-### Test Teleop
-
-``` bash
-ros2 launch jetbot_ros teleop_keyboard.launch.py
-```
-
-The keyboard controls are as follows:
-
-```
-w/x:  increase/decrease linear velocity
-a/d:  increase/decrease angular velocity
-
-space key, s:  force stop
-```
-
-Press Ctrl+C to quit.
-
-### Motor test (SparkFun Qwiic)
+### Motor smoke test
 
 Terminal 1:
 
@@ -235,37 +146,240 @@ ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.05}, angular:
 ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: -0.05}, angular: {z: 0.0}}"
 ```
 
-### Data Collection
+## Teleop
 
-``` bash
+```bash
+ros2 launch jetbot_ros teleop_keyboard.launch.py
+```
+
+Keys:
+
+```text
+w/x  increase/decrease linear velocity
+a/d  increase/decrease angular velocity
+space or s  force stop
+```
+
+## Gazebo Simulation
+
+Install simulation dependencies:
+
+```bash
+sudo apt install gazebo ros-jazzy-gazebo-ros
+```
+
+Build and source the overlay, then launch:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch jetbot_ros gazebo_world.launch.py
+```
+
+Navigation simulation:
+
+```bash
+ros2 launch jetbot_ros gazebo_nav.launch.py
+```
+
+Worlds live under:
+
+```text
+gazebo/worlds/
+```
+
+Notable worlds:
+
+- `dirt_path_curves.world`
+- `maze.world`
+- `maze_obstacles.world`
+
+### Sim to real checklist
+
+1. Verify Gazebo:
+
+```bash
+ros2 launch jetbot_ros gazebo_world.launch.py
+```
+
+2. Verify real hardware:
+
+```bash
+ros2 launch jetbot_ros jetbot_cpu.launch.py motor_controller:=motors_sparkfun
+```
+
+3. Publish a short drive command:
+
+```bash
+ros2 topic pub -1 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.05}, angular: {z: 0.0}}"
+```
+
+## Data Collection
+
+```bash
 ros2 launch jetbot_ros data_collection.launch.py
 ```
 
-It's recommended to view the camera feed in Gazebo by going to `Window -> Topic Visualization -> gazebo.msgs.ImageStamped` and selecting the `/gazebo/default/jetbot/camera_link/camera/image` topic.
+In Gazebo, view the camera feed from:
 
-Then drive the robot and press the `C` key to capture an image.  Then annotate that image in the pop-up window by clicking the center point of the path.  Repeat this all the way around the track.  It's important to also collect data of when the robot gets off-course (i.e. near the edges of the track, or completely off the track).  This way, the JetBot will know how to get back on track.
+```text
+/gazebo/default/jetbot/camera_link/camera/image
+```
 
-Press Ctrl+C when you're done collecting data to quit.
+Drive the robot and press `C` to capture labeled path data.
 
-### Train Navigation Model
+Datasets are stored under:
 
-Run this locally, substituting the path of the dataset that you collected (by default, it will be in a timestamped folder under `~/jetbot_ros_rubikpi/data/datasets/`)
+```text
+data/datasets/
+```
 
-``` bash
+## Train Navigation Model
+
+```bash
 cd ~/jetbot_ros_rubikpi/jetbot_ros/dnn
-python3 train.py --data ~/jetbot_ros_rubikpi/data/datasets/20211018-160950/
+python3 train.py --data ~/jetbot_ros_rubikpi/data/datasets/<timestamp>/
 ```
 
-### Run Navigation Model
+## Run Navigation Model
 
-After the model has finished training, run the command below to have the JetBot navigate autonomously around the track.  Substitute the path to your model below:
-
-``` bash
-ros2 launch jetbot_ros nav_model.launch.py model:=~/jetbot_ros_rubikpi/data/models/202106282129/model_best.pth
+```bash
+ros2 launch jetbot_ros nav_model.launch.py model:=~/jetbot_ros_rubikpi/data/models/<timestamp>/model_best.pth
 ```
 
-> note:  to reset the position of the robot in the Gazebo environment, press `Ctrl+R`
+## Edge Impulse
 
-<a href="https://youtu.be/gok9pvUzZeY" target="_blank"><img src=https://github.com/dusty-nv/jetbot_ros/raw/dev/docs/images/jetbot_gazebo_sim_video.jpg width="750"></a>
+The recommended camera-detection workflow now uses the separate local package:
 
+```text
+C:\Users\Eoin\git\edgeimpulse-ros
+```
 
+That package publishes:
+
+- `vision_msgs/Detection2DArray` on `/edgeimpulse/detections`
+- timing metadata on `/edgeimpulse/timing`
+- detection count on `/edgeimpulse/count`
+
+### Build a shared workspace with `edgeimpulse_ros`
+
+Because `edgeimpulse_ros` is a separate package, build both repos in one
+workspace:
+
+```bash
+cd ~/jetbot_ros_rubikpi
+bash scripts/setup_edge_impulse_workspace.sh \
+  ~/jetbot_edgeimpulse_ws \
+  ~/jetbot_ros_rubikpi \
+  ~/edgeimpulse-ros
+
+cd ~/jetbot_edgeimpulse_ws
+source /opt/ros/jazzy/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --symlink-install
+source install/setup.bash
+```
+
+### Install Edge Impulse runtime
+
+```bash
+sudo apt install -y ros-jazzy-vision-msgs python3-opencv
+sudo python3 -m pip install --break-system-packages -r ~/jetbot_ros_rubikpi/requirements-edge-impulse.txt
+sudo python3 -m pip install --break-system-packages edge_impulse_linux
+```
+
+Download the `.eim` model:
+
+```bash
+edge-impulse-linux-runner --download modelfile.eim
+```
+
+### Real hardware detection workflow
+
+Launch JetBot motor control plus the Edge Impulse detector:
+
+```bash
+cd ~/jetbot_edgeimpulse_ws
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 launch jetbot_ros jetbot_edge_impulse.launch.py \
+  motor_controller:=motors_sparkfun \
+  model_path:=/home/$USER/modelfile.eim \
+  camera:=0
+```
+
+Important:
+
+- `edgeimpulse_ros` opens the camera device directly.
+- Do not run the normal `v4l2_camera` node on the same camera at the same time.
+- This is the supported real-camera workflow.
+
+### Motor health workflow
+
+The motor-health path remains local to this repo.
+
+Inference node:
+
+```bash
+ros2 run jetbot_ros ei_motor_health_node --ros-args \
+  -p model_path:=modelfile.eim \
+  -p window_size:=300
+```
+
+CSV upload helper:
+
+```bash
+export EDGE_IMPULSE_API_KEY=your_api_key
+export EDGE_IMPULSE_HMAC_KEY=your_hmac_key
+ros2 run jetbot_ros ei_motor_health_collect -- \
+  --input motor_health.csv \
+  --interval-ms 16 \
+  --label motor_health
+```
+
+More detail:
+
+- [docs/edge-impulse-workflow.md](docs/edge-impulse-workflow.md)
+
+## Troubleshooting
+
+### `package 'jetbot_ros' not found`
+
+Source the overlay:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+```
+
+### USB webcam `Failed mapping device memory`
+
+Use MJPG and lower resolution:
+
+```bash
+ros2 run v4l2_camera v4l2_camera_node --ros-args \
+  -p video_device:=/dev/video0 \
+  -p image_width:=320 \
+  -p image_height:=240 \
+  -p fps:=15.0 \
+  -p pixel_format:="MJPG"
+```
+
+### USB webcam `Device or resource busy`
+
+Another process is using the camera:
+
+```bash
+ros2 node list
+ros2 node kill /v4l2_camera
+```
+
+### ROS + system Python note
+
+ROS 2 launch typically uses system Python. If you skipped the provisioner and a
+hardware node fails to import Qwiic libraries, install them into system Python:
+
+```bash
+sudo python3 -m pip install --break-system-packages sparkfun-qwiic pyserial spidev
+```

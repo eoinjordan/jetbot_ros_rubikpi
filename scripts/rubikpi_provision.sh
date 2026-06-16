@@ -29,9 +29,11 @@ apt-get update
 apt-get install -y --no-install-recommends \
   ros-jazzy-ros-base \
   ros-jazzy-v4l2-camera \
+  ros-jazzy-vision-msgs \
   ros-jazzy-gazebo-ros \
   gazebo \
   python3-colcon-common-extensions \
+  python3-opencv \
   python3-rosdep \
   python3-smbus \
   i2c-tools \

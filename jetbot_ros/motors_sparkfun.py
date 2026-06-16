@@ -1,7 +1,23 @@
 import rclpy
 
 from jetbot_ros.motors import MotorController
-import qwiic
+
+QwiicScmd = None
+
+try:
+    import qwiic
+    QwiicScmd = qwiic.QwiicScmd
+except ModuleNotFoundError as exc:
+    try:
+        import qwiic_scmd
+        QwiicScmd = qwiic_scmd.QwiicScmd
+    except ModuleNotFoundError:
+        raise RuntimeError(
+            "Missing SparkFun motor driver Python module. Install either "
+            "'sparkfun-qwiic' or 'sparkfun-qwiic-scmd' with "
+            "'sudo python3 -m pip install --break-system-packages "
+            "sparkfun-qwiic sparkfun-qwiic-scmd'."
+        ) from exc
 
 
 MAX_SPEED = 255
@@ -14,7 +30,7 @@ class MotorControllerSparkfun(MotorController):
     
     def __init__(self):
         super().__init__()
-        self.driver = qwiic.QwiicScmd()
+        self.driver = QwiicScmd()
         
     def set_speed(self, left, right):
         self.driver.set_drive(0, 0, int(left * MAX_SPEED))

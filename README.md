@@ -82,6 +82,12 @@ On some Rubik Pi Ubuntu images, Gazebo Classic packages are not available.
 The provisioner now skips Gazebo in that case so real hardware bringup still
 works.
 
+Verify that the SparkFun Python driver is present before launching motors:
+
+```bash
+python3 -c "import qwiic; print(qwiic.__file__)"
+```
+
 ## Build
 
 This package can be built standalone:
@@ -387,3 +393,7 @@ hardware node fails to import Qwiic libraries, install them into system Python:
 ```bash
 sudo python3 -m pip install --break-system-packages sparkfun-qwiic pyserial spidev
 ```
+
+If `scripts/rubikpi_provision.sh` stopped at `externally-managed-environment`,
+pull the latest repo and rerun it. The old script attempted a system `pip`
+upgrade, which Ubuntu 24.04 blocks.

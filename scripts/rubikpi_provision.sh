@@ -30,10 +30,14 @@ apt-get install -y --no-install-recommends \
   ros-jazzy-ros-base \
   ros-jazzy-v4l2-camera \
   ros-jazzy-vision-msgs \
+  build-essential \
+  python3-dev \
   python3-colcon-common-extensions \
   python3-opencv \
   python3-rosdep \
+  python3-serial \
   python3-smbus \
+  python3-spidev \
   i2c-tools \
   git \
   udev
@@ -52,14 +56,14 @@ fi
 rosdep init 2>/dev/null || true
 rosdep update || true
 
-python3 -m pip install --upgrade pip
+# Ubuntu 24.04 marks system Python as externally managed.
+# Install the hardware Python packages directly with an explicit override
+# instead of trying to upgrade pip itself.
 python3 -m pip install \
   --break-system-packages \
   sparkfun-qwiic \
   Adafruit-SSD1306 \
-  Adafruit-MotorHAT \
-  pyserial \
-  spidev
+  Adafruit-MotorHAT
 
 apt-get clean
 rm -rf /var/lib/apt/lists/*

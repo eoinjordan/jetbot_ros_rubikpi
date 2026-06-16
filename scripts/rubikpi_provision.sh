@@ -30,8 +30,6 @@ apt-get install -y --no-install-recommends \
   ros-jazzy-ros-base \
   ros-jazzy-v4l2-camera \
   ros-jazzy-vision-msgs \
-  ros-jazzy-gazebo-ros \
-  gazebo \
   python3-colcon-common-extensions \
   python3-opencv \
   python3-rosdep \
@@ -39,6 +37,16 @@ apt-get install -y --no-install-recommends \
   i2c-tools \
   git \
   udev
+
+# Gazebo Classic is not available on every Rubik Pi / Ubuntu image.
+# Treat simulation packages as optional so hardware bringup still succeeds.
+if apt-cache show gazebo >/dev/null 2>&1 && apt-cache show ros-jazzy-gazebo-ros >/dev/null 2>&1; then
+  apt-get install -y --no-install-recommends \
+    ros-jazzy-gazebo-ros \
+    gazebo
+else
+  echo "Skipping Gazebo Classic packages on this Rubik Pi image."
+fi
 
 # Initialize rosdep (ignore if already done)
 rosdep init 2>/dev/null || true

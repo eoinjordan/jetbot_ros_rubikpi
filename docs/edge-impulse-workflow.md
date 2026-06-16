@@ -70,3 +70,8 @@ Gazebo simulation stays separate from `edgeimpulse_ros` for now. The current
 `edgeimpulse_ros` package reads frames directly from a V4L2 camera index, not a
 ROS image topic, so it is a real-camera workflow rather than a Gazebo camera
 workflow.
+
+On Rubik Pi specifically, treat Gazebo as an off-board development workflow.
+Some Ubuntu images for Rubik Pi do not provide Gazebo Classic packages, so the
+Rubik Pi provisioner installs the real-hardware stack first and skips Gazebo
+when those packages are unavailable.

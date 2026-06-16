@@ -74,10 +74,13 @@ That installs:
 
 - ROS 2 Jazzy base packages
 - `v4l2_camera`
-- Gazebo Classic
 - `vision_msgs`
 - OpenCV
 - Qwiic / motor / OLED Python dependencies
+
+On some Rubik Pi Ubuntu images, Gazebo Classic packages are not available.
+The provisioner now skips Gazebo in that case so real hardware bringup still
+works.
 
 ## Build
 
@@ -162,7 +165,8 @@ space or s  force stop
 
 ## Gazebo Simulation
 
-Install simulation dependencies:
+Install simulation dependencies on a Linux development machine where Gazebo
+Classic is actually available:
 
 ```bash
 sudo apt install gazebo ros-jazzy-gazebo-ros

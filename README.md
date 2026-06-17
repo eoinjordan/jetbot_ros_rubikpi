@@ -1,4 +1,4 @@
-# JetBot ROS on Rubik Pi
+# JetBot ROS2 on Qualcomm 6490 suite of platforms e.g. Rubik Pi
 
 ROS 2 Jazzy nodes, Gazebo simulation assets, and Edge Impulse integration for a
 JetBot-class robot on Rubik Pi and Ubuntu 24.04.

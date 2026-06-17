@@ -40,8 +40,6 @@ Simulation in this repo still uses Gazebo Classic:
 - `gazebo`
 - `gazebo_ros`
 
-If you want Gazebo Harmonic or modern `ros_gz_*` tooling, that is a separate
-migration.
 
 ## Hardware Bringup
 

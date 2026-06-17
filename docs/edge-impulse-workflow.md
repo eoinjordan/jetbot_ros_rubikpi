@@ -75,3 +75,6 @@ On Rubik Pi specifically, treat Gazebo as an off-board development workflow.
 Some Ubuntu images for Rubik Pi do not provide Gazebo Classic packages, so the
 Rubik Pi provisioner installs the real-hardware stack first and skips Gazebo
 when those packages are unavailable.
+
+For the generic 2-wheel Gazebo path and architecture split, see
+[architecture.md](architecture.md).

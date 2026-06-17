@@ -24,6 +24,8 @@ scripts/                   Provisioning and workspace helpers
 data/                      Local datasets and trained models
 ```
 
+Architecture overview: [docs/architecture.md](docs/architecture.md).
+
 ## Platform
 
 Validated target:
@@ -171,19 +173,28 @@ space or s  force stop
 
 ## Gazebo Simulation
 
-Install simulation dependencies on a Linux development machine where Gazebo
-Classic is actually available:
+Run Gazebo on a Linux development machine or WSL Ubuntu instance where Gazebo
+Classic is actually available. Do not treat Gazebo as a Rubik Pi onboard
+workflow.
+
+Install simulation dependencies:
 
 ```bash
 sudo apt install gazebo ros-jazzy-gazebo-ros
 ```
 
-Build and source the overlay, then launch:
+Build and source the overlay:
 
 ```bash
+cd ~/jetbot_ros_rubikpi
 source /opt/ros/jazzy/setup.bash
 colcon build --symlink-install
 source install/setup.bash
+```
+
+Launch the default world:
+
+```bash
 ros2 launch jetbot_ros gazebo_world.launch.py
 ```
 
@@ -204,6 +215,35 @@ Notable worlds:
 - `dirt_path_curves.world`
 - `maze.world`
 - `maze_obstacles.world`
+
+### Generic 2-wheel sim
+
+The repo also includes a generic differential-drive model and matching worlds:
+
+- model: `simple_diff_ros`
+- worlds:
+  - `dirt_path_simple_diff.world`
+  - `dirt_path_curves_simple_diff.world`
+  - `maze_simple_diff.world`
+  - `maze_obstacles_simple_diff.world`
+
+Generic robot launch:
+
+```bash
+ros2 launch jetbot_ros gazebo_world.launch.py \
+  robot_model:=simple_diff_ros \
+  robot_name:=simple_diff
+```
+
+Drive the generic robot:
+
+```bash
+ros2 topic pub -r 5 /simple_diff/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.2}, angular: {z: 0.0}}"
+```
+
+For a strict simple-diff world, start Gazebo directly with one of the
+`*_simple_diff.world` files and then run the repo spawner. See
+[docs/architecture.md](docs/architecture.md).
 
 ### Sim to real checklist
 
@@ -365,16 +405,19 @@ source install/setup.bash
 
 ### USB webcam `Failed mapping device memory`
 
-Use MJPG and lower resolution:
+Use `YUYV` on the validated Rubik Pi path:
 
 ```bash
 ros2 run v4l2_camera v4l2_camera_node --ros-args \
   -p video_device:=/dev/video0 \
-  -p image_width:=320 \
-  -p image_height:=240 \
+  -p image_width:=640 \
+  -p image_height:=480 \
   -p fps:=15.0 \
-  -p pixel_format:="MJPG"
+  -p pixel_format:="YUYV"
 ```
+
+If `MJPG` is selected on this camera and image stack, `v4l2_camera` may abort
+with an empty image encoding and a `cv_bridge::Exception`.
 
 ### USB webcam `Device or resource busy`
 
@@ -391,7 +434,8 @@ ROS 2 launch typically uses system Python. If you skipped the provisioner and a
 hardware node fails to import Qwiic libraries, install them into system Python:
 
 ```bash
-sudo python3 -m pip install --break-system-packages sparkfun-qwiic pyserial spidev
+sudo apt install -y python3-serial python3-spidev
+sudo python3 -m pip install --break-system-packages sparkfun-qwiic sparkfun-qwiic-scmd
 ```
 
 If `scripts/rubikpi_provision.sh` stopped at `externally-managed-environment`,

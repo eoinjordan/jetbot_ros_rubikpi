@@ -45,8 +45,10 @@ edge-impulse-linux-runner --download modelfile.eim
 
 ## Run On Real JetBot Hardware
 
-This path lets `edgeimpulse_ros` open the camera device directly. Do not run the
-regular `v4l2_camera` node on the same device at the same time.
+`edgeimpulse_ros` no longer opens the camera itself; it subscribes to a
+`sensor_msgs/Image` topic. This launch starts a `v4l2_camera` driver that
+publishes to `image_topic` (default `/jetbot/camera/image_raw`) and points the
+detector at it, so do not start a second camera driver on the same device.
 
 ```bash
 cd ~/jetbot_edgeimpulse_ws
@@ -55,21 +57,21 @@ source install/setup.bash
 ros2 launch jetbot_ros jetbot_edge_impulse.launch.py \
   motor_controller:=motors_sparkfun \
   model_path:=/home/$USER/modelfile.eim \
-  camera:=0
+  video_device:=/dev/video0
 ```
 
-Published topics:
+Published topics (default node namespace `/edgeimpulse_detector`):
 
-- `/edgeimpulse/detections` (`vision_msgs/Detection2DArray`)
-- `/edgeimpulse/timing` (`std_msgs/String`)
-- `/edgeimpulse/count` (`std_msgs/Int32`)
+- `/edgeimpulse_detector/detections` (`vision_msgs/Detection2DArray`)
+- `/edgeimpulse_detector/debug_image` (`sensor_msgs/Image`, when `publish_debug_image:=true`)
+- `/diagnostics` (`diagnostic_msgs/DiagnosticArray`, FPS and latency)
 
 ## Gazebo
 
-Gazebo simulation stays separate from `edgeimpulse_ros` for now. The current
-`edgeimpulse_ros` package reads frames directly from a V4L2 camera index, not a
-ROS image topic, so it is a real-camera workflow rather than a Gazebo camera
-workflow.
+Gazebo simulation stays separate from `edgeimpulse_ros` for now. `edgeimpulse_ros`
+subscribes to a `sensor_msgs/Image` topic, so in principle it can consume a
+Gazebo camera stream, but this repo validates it only against the real V4L2
+camera path.
 
 On Rubik Pi specifically, treat Gazebo as an off-board development workflow.
 Some Ubuntu images for Rubik Pi do not provide Gazebo Classic packages, so the

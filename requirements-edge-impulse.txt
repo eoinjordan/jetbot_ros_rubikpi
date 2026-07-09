@@ -1,2 +1,3 @@
 edge_impulse_linux
+pyaudio
 requests

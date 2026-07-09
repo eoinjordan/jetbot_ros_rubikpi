@@ -30,10 +30,13 @@ apt-get install -y --no-install-recommends \
   ros-jazzy-ros-base \
   ros-jazzy-v4l2-camera \
   ros-jazzy-vision-msgs \
+  ros-jazzy-diagnostic-msgs \
   build-essential \
   python3-dev \
   python3-colcon-common-extensions \
   python3-opencv \
+  python3-numpy \
+  portaudio19-dev \
   python3-rosdep \
   python3-serial \
   python3-smbus \

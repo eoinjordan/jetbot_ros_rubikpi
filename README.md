@@ -304,11 +304,11 @@ The recommended camera-detection workflow now uses the separate local package:
 C:\Users\Eoin\git\edgeimpulse-ros
 ```
 
-That package publishes:
+That package publishes (default node namespace `/edgeimpulse_detector`):
 
-- `vision_msgs/Detection2DArray` on `/edgeimpulse/detections`
-- timing metadata on `/edgeimpulse/timing`
-- detection count on `/edgeimpulse/count`
+- `vision_msgs/Detection2DArray` on `/edgeimpulse_detector/detections`
+- an annotated `sensor_msgs/Image` on `/edgeimpulse_detector/debug_image` (when `publish_debug_image:=true`)
+- `diagnostic_msgs/DiagnosticArray` on `/diagnostics` (FPS and latency)
 
 ### Build a shared workspace with `edgeimpulse_ros`
 
@@ -332,9 +332,10 @@ source install/setup.bash
 ### Install Edge Impulse runtime
 
 ```bash
-sudo apt install -y ros-jazzy-vision-msgs python3-opencv
+sudo apt install -y ros-jazzy-vision-msgs ros-jazzy-diagnostic-msgs \
+  ros-jazzy-v4l2-camera python3-opencv python3-numpy portaudio19-dev
 sudo python3 -m pip install --break-system-packages -r ~/jetbot_ros_rubikpi/requirements-edge-impulse.txt
-sudo python3 -m pip install --break-system-packages edge_impulse_linux
+sudo python3 -m pip install --break-system-packages edge_impulse_linux pyaudio
 ```
 
 Download the `.eim` model:
@@ -354,13 +355,13 @@ source install/setup.bash
 ros2 launch jetbot_ros jetbot_edge_impulse.launch.py \
   motor_controller:=motors_sparkfun \
   model_path:=/home/$USER/modelfile.eim \
-  camera:=0
+  video_device:=/dev/video0
 ```
 
 Important:
 
-- `edgeimpulse_ros` opens the camera device directly.
-- Do not run the normal `v4l2_camera` node on the same camera at the same time.
+- `edgeimpulse_ros` subscribes to a `sensor_msgs/Image` topic; this launch starts a `v4l2_camera` driver that publishes it.
+- Do not start a second camera driver on the same `/dev/video*` device.
 - This is the supported real-camera workflow.
 
 ### Motor health workflow
